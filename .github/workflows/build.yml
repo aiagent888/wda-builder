@@ -25,8 +25,18 @@ jobs:
             bash ./Scripts/bootstrap.sh -d
           fi
 
+      - name: Neutralize asset catalogs (authored by newer Xcode)
+        run: |
+          find . -name 'Assets.xcassets' -not -path './dd/*' | while read c; do
+            echo "replacing: $c"
+            rm -rf "$c"
+            mkdir -p "$c"
+            printf '{ "info" : { "author" : "xcode", "version" : 1 } }' > "$c/Contents.json"
+          done
+
       - name: Build WDA (build-for-testing)
         run: |
+          set -o pipefail
           xcodebuild build-for-testing \
             -project WebDriverAgent.xcodeproj \
             -scheme WebDriverAgentRunner \
@@ -45,6 +55,8 @@ jobs:
           APP=$(find dd/Build/Products -name 'WebDriverAgentRunner-Runner.app' -type d | head -1)
           echo "APP=$APP"
           rm -rf "$APP/PlugIns/WebDriverAgentRunner.xctest.dSYM"
+          test -f "$APP/WebDriverAgentRunner-Runner" || { echo "❌ 主程序缺失,构建未完成"; exit 1; }
+          test -f "$APP/PlugIns/WebDriverAgentRunner.xctest/WebDriverAgentRunner" || { echo "❌ xctest缺失"; exit 1; }
           mkdir Payload
           cp -R "$APP" Payload/
           zip -qry WDA-xcode16.ipa Payload
