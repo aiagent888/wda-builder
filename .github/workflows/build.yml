@@ -48,6 +48,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=NO \
+            ASSETCATALOG_COMPILER_APPICON_NAME= \
             -derivedDataPath dd 2>&1 | tail -15
 
       - name: Package IPA (strip dSYM)
